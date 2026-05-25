@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>纸质档案数字化实验模拟器 | 华宇万维流程预习</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f0f2f5;
+            font-family: 'Segoe UI', 'Microsoft YaHei', Roboto, system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        /* 头部 */
+        .header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 24px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 1.9rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .header .badge {
+            background: #facc15;
+            color: #1e293b;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .sub {
+            opacity: 0.9;
+            margin-top: 8px;
+            font-size: 0.9rem;
+        }
+        /* 双栏布局 */
+        .two-columns {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+        .left-panel {
+            flex: 2;
+            min-width: 280px;
+        }
+        .right-panel {
+            flex: 1.2;
+            min-width: 260px;
+        }
+        /* 流程步骤卡片 */
+        .process-steps {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            border-left: 5px solid #2a5298;
+            padding-left: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .step-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .step-card {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 12px 16px;
+            flex: 1 0 150px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid #e2e8f0;
+            position: relative;
+        }
+        .step-card.active {
+            border-color: #2a5298;
+            background: #eef2ff;
+            box-shadow: 0 4px 10px rgba(42,82,152,0.15);
+        }
+        .step-card.completed {
+            background: #e6f7ec;
+            border-color: #10b981;
+        }
+        .step-num {
+            font-weight: 800;
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+        .step-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+        .step-desc {
+            font-size: 0.7rem;
+            color: #475569;
+        }
+        .check-icon {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            color: #10b981;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        /* 模拟操作区 */
+        .simulation-area {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .current-step-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .tips {
+            background: #fef9e3;
+            border-left: 4px solid #f59e0b;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin: 15px 0;
+            font-size: 0.85rem;
+        }
+        .operation-panel {
+            background: #f1f5f9;
+            border-radius: 20px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .param-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .param-item {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 14px;
+            flex: 1;
+            min-width: 150px;
+        }
+        .btn {
+            background: #2a5298;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.85rem;
+        }
+        .btn:hover {
+            background: #1e3c72;
+            transform: translateY(-1px);
+        }
+        .btn-warning {
+            background: #dc2626;
+        }
+        .btn-warning:hover {
+            background: #b91c1c;
+        }
+        .btn-success {
+            background: #10b981;
+        }
+        .file-list-mock {
+            background: #0f172a;
+            color: #cbd5e1;
+            padding: 12px;
+            border-radius: 16px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            margin-top: 15px;
+        }
+        /* 右侧面板 */
+        .info-card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .warning-list {
+            list-style: none;
+        }
+        .warning-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .log-area {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 20px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            height: 300px;
+            overflow-y: auto;
+        }
+        .log-line {
+            margin-bottom: 6px;
+            border-left: 2px solid #3b82f6;
+            padding-left: 10px;
+        }
+        .role-badge {
+            background: #e2e8f0;
+            color: #1e293b;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        @media (max-width: 800px) {
+            .step-grid { flex-direction: column; }
+            .step-card { flex: auto; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>
+            📄 纸质档案数字化实验模拟器
+            <span class="badge">华宇万维 V10.5 课前预习版</span>
+        </h1>
+        <div class="sub">依据 DA/T 31-2017 | 模拟提卷→扫描→质检→总检全流程 | 熟悉工序与操作要点</div>
+    </div>
+
+    <div class="two-columns">
+        <!-- 左侧主区域 -->
+        <div class="left-panel">
+            <!-- 流程步骤区 -->
+            <div class="process-steps">
+                <div class="section-title">
+                    <span>📋 数字化全流程 (16工序精简核心11步)</span>
+                    <span class="role-badge" id="roleDisplay">👥 小组分工: ABC轮转</span>
+                </div>
+                <div class="step-grid" id="stepGrid"></div>
+                <div class="tips">
+                    💡 <strong>实验要点</strong>：工序必须依序进行，每个环节“领卷→加工→交卷”才能进入下一道。同一人不担任连续工序，需轮转（如A→B→C→A...）。共享扫描仪需通过IP连接。
+                </div>
+            </div>
+
+            <!-- 动态操作模拟区 -->
+            <div class="simulation-area">
+                <div class="current-step-title">
+                    <span id="currentStepName">提卷接收</span>
+                    <button class="btn" id="resetProcessBtn" style="background:#6c757d;">⟳ 重置全流程</button>
+                </div>
+                <div id="stepOperationContent">
+                    <!-- 动态渲染当前步骤的操作界面 -->
+                </div>
+                <div id="stepMessage" style="margin-top: 15px; font-size:0.85rem; color:#2563eb;"></div>
+            </div>
+        </div>
+
+        <!-- 右侧辅助面板 -->
+        <div class="right-panel">
+            <div class="info-card">
+                <div class="section-title" style="font-size:1.1rem;">⚠️ 实验注意事项</div>
+                <ul class="warning-list">
+                    <li>🔒 加密狗并发最多12人，轮流登录</li>
+                    <li>🖨️ 扫描仪IP共享连接 (Epson Scan设置网络)</li>
+                    <li>📁 务必只选本组任务，否则影响其他组 (扣5分)</li>
+                    <li>🔄 工序不可跳过，必须交卷/领卷顺序进行</li>
+                    <li>👥 前后工序不同人，否则扣5分</li>
+                    <li>📸 实验结束关闭扫描仪&计算机</li>
+                    <li>📊 最终提交JPG流程日志（WIN+Shift+S截图）</li>
+                </ul>
+            </div>
+            <div class="info-card">
+                <div class="section-title" style="font-size:1.1rem;">📌 本组模拟信息</div>
+                <div><strong>组号：</strong> 第20组 &nbsp;|&nbsp; <strong>档号示例：</strong> 0020-2021-20001</div>
+                <div><strong>全宗号：</strong> 0020 &nbsp; <strong>年度：</strong>2021 &nbsp; <strong>件号：</strong>20001</div>
+                <div><strong>当前任务批次：</strong> 20250413-20001</div>
+                <div><strong>分工轮转：</strong> 张三丰(提卷/扫描/质检) → 张无忌(拆卷/优化/校对) → 赵敏(录入/二录/总检)</div>
+                <div class="tips" style="margin-top:12px;">📢 模拟器已内置“故意错误”：扫描顺序颠倒、黑点、漏页，供后续工序处理。</div>
+            </div>
+            <div class="info-card">
+                <div class="section-title" style="font-size:1.1rem;">📜 操作日志 (流程记录)</div>
+                <div class="log-area" id="logPanel">
+                    <div class="log-line">✅ 系统准备就绪，开始预习模拟</div>
+                    <div class="log-line">📌 请按顺序点击各工序，完成“领卷→操作→交卷”</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        🔧 教学模拟工具 | 基于《纸质档案数字化实验指导书2024版》开发 | 上机前熟悉流程要点，实际以华宇万维系统为准
+    </footer>
+</div>
+
+<script>
+    // ----- 定义核心工序 (11个核心环节，对应实验指导书流程A/B)
+    const steps = [
+        { id: "receive", name: "📥 提卷接收", desc: "生成批次、录入档号/盒号/件数", needParams: false, needAction: true },
+        { id: "unpack", name: "📂 拆卷整理", desc: "核对页数、修正档号、完善信息", needParams: false, needAction: true },
+        { id: "scan", name: "🖨️ 批量扫描", desc: "连接扫描仪(IP)，设置分辨率/色彩，扫描4-6页", needParams: true, needAction: true },
+        { id: "rescan", name: "🔄 补扫重扫", desc: "插扫/替扫/调整顺序，更名文件", needParams: false, needAction: true },
+        { id: "imageopt", name: "🎨 图像优化", desc: "纠偏、去污、裁剪、批量框外去污", needParams: true, needAction: true },
+        { id: "input1", name: "✍️ 看图录入(一录)", desc: "著录元数据: 题名/责任者/日期/保管期限", needParams: true, needAction: true },
+        { id: "input2", name: "🔄 看图二录", desc: "第二人录入(故意录错1处，供校对)", needParams: true, needAction: true },
+        { id: "imgqc", name: "🔍 图像质检", desc: "检查图像质量，可退回重扫或优化", needParams: false, needAction: true },
+        { id: "doublecheck", name: "📝 双录校对", desc: "比对一录二录差异，选择正确元数据", needParams: true, needAction: true },
+        { id: "finalqc", name: "✅ 质量检查/总检", desc: "最终质检，确保原文与目录正确", needParams: false, needAction: true },
+        { id: "sampling", name: "🎲 质量抽检(选做)", desc: "甲方抽检，模拟成果验收", needParams: false, needAction: true }
+    ];
+
+    // 各步骤的完成状态
+    let completed = new Array(steps.length).fill(false);
+    let currentStepIdx = 0;          // 当前打开的步骤
+    let stepData = {                  // 模拟数据
+        filePages: 6,                // 共6页
+        pageOrder: [1,2,3,4,5,6],    // 故意乱序模拟(初始化乱序)
+        hasBlackSpot: true,
+        metadata: {
+            title: "关于数字档案馆建设的通知",
+            creator: "校长办公室",
+            date: "2024-03-15",
+            retention: "永久",
+            secret: "内部"
+        },
+        secondRecord: null,           // 二录存储
+        scanParams: { resolution: 300, colorMode: "24位真彩色", format: "TIFF" },
+        imageOptimized: false
+    };
+
+    // 故意制造乱序和瑕疵 (模拟指导书故意放错顺序、涂黑点)
+    function initMockData() {
+        // 打乱页码顺序: 原始[1,2,3,4,5,6] -> 颠倒某页、顺序错
+        stepData.pageOrder = [1,3,2,5,4,6];
+        stepData.hasBlackSpot = true;
+        stepData.imageOptimized = false;
+        stepData.metadata.secondInput = null;
+        stepData.scanParams = { resolution: 300, colorMode: "24位真彩色", format: "TIFF" };
+    }
+    initMockData();
+
+    // 添加日志
+    function addLog(msg, isError = false) {
+        const logDiv = document.getElementById('logPanel');
+        const entry = document.createElement('div');
+        entry.className = 'log-line';
+        entry.style.color = isError ? '#f87171' : '#cbd5e6';
+        entry.innerHTML = `🕒 ${new Date().toLocaleTimeString()} ${msg}`;
+        logDiv.appendChild(entry);
+        logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    // 渲染步骤卡片
+    function renderSteps() {
+        const grid = document.getElementById('stepGrid');
+        grid.innerHTML = steps.map((step, idx) => `
+            <div class="step-card ${idx === currentStepIdx ? 'active' : ''} ${completed[idx] ? 'completed' : ''}" data-idx="${idx}">
+                <div class="step-num">工序 ${idx+1}</div>
+                <div class="step-name">${step.name}</div>
+                <div class="step-desc">${step.desc}</div>
+                ${completed[idx] ? '<div class="check-icon">✓</div>' : ''}
+            </div>
+        `).join('');
+        // 绑定点击事件
+        document.querySelectorAll('.step-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                let idx = parseInt(card.dataset.idx);
+                // 允许跳转但给出提示，但必须按顺序才可操作？按实验要求必须依序，但预习模式可查看任何步骤但提示顺序
+                if (idx > currentStepIdx && !completed[currentStepIdx] && idx !== currentStepIdx) {
+                    addLog(`⚠️ 实验要求依序进行，请先完成「${steps[currentStepIdx].name}」再进入下一步。`, true);
+                    return;
+                }
+                currentStepIdx = idx;
+                renderSteps();
+                renderOperation();
+            });
+        });
+    }
+
+    // 渲染当前步骤操作界面
+    function renderOperation() {
+        const step = steps[currentStepIdx];
+        const isStepCompleted = completed[currentStepIdx];
+        const container = document.getElementById('stepOperationContent');
+        document.getElementById('currentStepName').innerHTML = step.name;
+
+        if (isStepCompleted) {
+            container.innerHTML = `
+                <div class="tips" style="background:#e6f7ec; border-left-color:#10b981;">
+                    ✅ 本环节已完成。点击下方「重置流程」可重新练习，或继续下一个工序。
+                </div>
+                <button class="btn btn-success" id="gotoNextBtn">➡ 前往下一工序</button>
+            `;
+            const nextBtn = document.getElementById('gotoNextBtn');
+            if (nextBtn) nextBtn.onclick = () => {
+                if (currentStepIdx + 1 < steps.length) {
+                    currentStepIdx++;
+                    renderSteps();
+                    renderOperation();
+                } else {
+                    addLog("🎉 恭喜！已完成全部数字化流程！可重置继续练习。");
+                }
+            };
+            return;
+        }
+
+        // 未完成时渲染具体操作界面
+        let html = `<div class="operation-panel">`;
+        // 通用领卷/交卷模拟
+        html += `<div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <button class="btn" id="receiveBtn">📂 领卷 (模拟领取本组任务)</button>
+                    <button class="btn btn-success" id="submitBtn" disabled>📤 交卷 (完成工序)</button>
+                 </div>`;
+        html += `<div id="stepSpecificArea"></div>`;
+        html += `</div>`;
+        container.innerHTML = html;
+
+        let hasReceived = false;  // 模拟领卷状态
+        // 获取元素
+        const receiveBtn = document.getElementById('receiveBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const specificArea = document.getElementById('stepSpecificArea');
+
+        // 领卷逻辑
+        receiveBtn.onclick = () => {
+            if (hasReceived) {
+                addLog("⚠️ 已经领卷，请操作完毕后交卷。");
+                return;
+            }
+            hasReceived = true;
+            addLog(`📌 领卷成功：领取本组档号 0020-2021-20001，批次 ${step.name}`);
+            receiveBtn.disabled = true;
+            receiveBtn.innerText = "✅ 已领卷";
+            submitBtn.disabled = false;
+            // 渲染当前步骤的详细操作内容
+            renderStepSpecific(specificArea, step.id);
+        };
+
+        submitBtn.onclick = () => {
+            if (!hasReceived) {
+                addLog("❌ 请先点击「领卷」再操作并交卷！", true);
+                return;
+            }
+            // 验证当前步骤是否完成必要操作 (通过全局标志)
+            let canComplete = validateStepCompletion(step.id);
+            if (!canComplete) {
+                addLog(`❌ ${step.name} 未完成必要操作，请根据提示完成后再交卷。`, true);
+                return;
+            }
+            // 标记完成
+            completed[currentStepIdx] = true;
+            addLog(`✅ 交卷成功！完成「${step.name}」工序，数据已进入下一环节。`);
+            // 若当前步骤是扫描等，更新模拟数据状态
+            if (step.id === 'scan') {
+                addLog("📸 批量扫描完成，图像已生成（包含故意顺序错误、黑点）");
+            }
+            if (step.id === 'imageopt') {
+                stepData.imageOptimized = true;
+                addLog("✨ 图像优化完成：已纠偏、去污");
+            }
+            if (step.id === 'input1') {
+                addLog(`📝 元数据一录完成：题名=${stepData.metadata.title}`);
+            }
+            if (step.id === 'input2') {
+                // 故意录错模拟
+                addLog(`⚠️ 二录人员故意录错一处（责任者录为“校办室”），待双录校对发现。`);
+                stepData.metadata.secondInput = { title: stepData.metadata.title, creator: "校办室", date: stepData.metadata.date };
+            }
+            if (step.id === 'doublecheck') {
+                addLog(`🔁 双录校对通过，已修正为正确元数据。`);
+            }
+            renderSteps();
+            renderOperation();
+            // 自动跳转提示
+            if (currentStepIdx + 1 < steps.length) {
+                setTimeout(() => {
+                    if(confirm(`「${step.name}」已完成，是否前往下一工序「${steps[currentStepIdx+1].name}」？`)) {
+                        currentStepIdx++;
+                        renderSteps();
+                        renderOperation();
+                    }
+                }, 200);
+            }
+        };
+    }
+
+    // 根据步骤ID渲染具体操作界面 (模拟真实系统参数)
+    function renderStepSpecific(container, stepId) {
+        switch(stepId) {
+            case 'receive':
+                container.innerHTML = `
+                    <div class="param-group">
+                        <div class="param-item"><strong>批次号</strong><br>20250413-20001</div>
+                        <div class="param-item"><strong>档案门类</strong><br>简化文书</div>
+                        <div class="param-item"><strong>件数/页数</strong><br>1件 / ${stepData.filePages}页</div>
+                    </div>
+                    <div><label>档号输入: <input type="text" id="danghao" value="0020-2021-20001" class="param-item" style="width:auto;"></label></div>
+                    <div class="tips">✔️ 提卷接收生成唯一档号，全宗号-年度-件号。点击领卷后必须录入正确档号。</div>
+                    <button class="btn" id="mockReceiveConfirm">✅ 确认提卷登记</button>
+                `;
+                const confirmBtn = container.querySelector('#mockReceiveConfirm');
+                confirmBtn.onclick = () => {
+                    const dh = document.getElementById('danghao').value;
+                    if(dh === "0020-2021-20001") {
+                        addLog("提卷登记成功，已生成档案条目。");
+                        window._stepSpecificDone = true;
+                        confirmBtn.disabled = true;
+                    } else {
+                        addLog("档号格式应为 0020-2021-20001，请修正", true);
+                    }
+                };
+                break;
+            case 'unpack':
+                container.innerHTML = `
+                    <div>📄 档案信息核对：页数 <input type="number" id="pageCount" value="${stepData.filePages}" min="1"> 件号正确性检查</div>
+                    <div class="tips">拆卷整理需完善页数，确认实际页码与记录一致。</div>
+                    <button class="btn" id="unpackConfirm">✅ 核对完成，交卷</button>
+                `;
+                const unpackBtn = container.querySelector('#unpackConfirm');
+                unpackBtn.onclick = () => {
+                    let newPages = parseInt(document.getElementById('pageCount').value);
+                    stepData.filePages = newPages;
+                    addLog(`拆卷整理：确认页数=${newPages}，档案无破损。`);
+                    window._stepSpecificDone = true;
+                    unpackBtn.disabled = true;
+                };
+                break;
+            case 'scan':
+                container.innerHTML = `
+                    <div class="param-group">
+                        <div class="param-item"><label>扫描仪IP连接:</label> <input value="192.168.1.105" placeholder="输入IP"></div>
+                        <div class="param-item"><label>分辨率:</label> <select id="resolution"><option>200dpi</option><option selected>300dpi</option><option>600dpi</option></select></div>
+                        <div class="param-item"><label>色彩模式:</label> <select id="colorMode"><option selected>24位真彩色</option><option>灰度</option></select></div>
+                        <div class="param-item"><label>存储格式:</label> <select id="format"><option selected>TIFF</option><option>JPEG</option><option>PDF</option></select></div>
+                    </div>
+                    <div class="tips">⚠️ 根据实验要求：故意放错顺序、颠倒某页、涂黑点（模拟已存在）。扫描前预扫一张检查质量。</div>
+                    <button class="btn" id="simulateScan">▶ 开始批量扫描 (6页)</button>
+                    <div class="file-list-mock" id="scanPreview"></div>
+                `;
+                const scanBtn = container.querySelector('#simulateScan');
+                scanBtn.onclick = () => {
+                    const res = document.getElementById('resolution').value;
+                    const color = document.getElementById('colorMode').value;
+                    const format = document.getElementById('format').value;
+                    stepData.scanParams = { resolution: res, colorMode: color, format: format };
+                    addLog(`批量扫描完成，参数：${res}/${color}/${format}，图像存储至服务器。当前页码顺序: ${stepData.pageOrder.join(',')} (故意错序)`);
+                    const preview = container.querySelector('#scanPreview');
+                    preview.innerHTML = `📁 扫描生成图像: ${stepData.pageOrder.map(p => `page_${p}.${format.toLowerCase()}`).join(', ')}<br>⚠️ 包含颠倒页、黑点瑕疵，后续工序需处理。`;
+                    window._stepSpecificDone = true;
+                    scanBtn.disabled = true;
+                };
+                break;
+            case 'rescan':
+                container.innerHTML = `
+                    <div>当前扫描图像顺序: <span id="orderList">${stepData.pageOrder.join(' → ')}</span></div>
+                    <div class="param-group">
+                        <button class="btn" id="movePage">🖱️ 拖动调整顺序(模拟)</button>
+                        <button class="btn" id="insertPage">📄 插扫(补扫漏页)</button>
+                    </div>
+                    <div class="tips">补扫重扫: 可插扫、替扫、调整页码顺序。文件更名可批量重命名。</div>
+                `;
+                const moveBtn = container.querySelector('#movePage');
+                const insertBtn = container.querySelector('#insertPage');
+                moveBtn.onclick = () => {
+                    stepData.pageOrder = [1,2,3,4,5,6];
+                    document.getElementById('orderList').innerText = stepData.pageOrder.join(' → ');
+                    addLog("已通过拖动调整顺序为正确顺序1-6。");
+                    window._stepSpecificDone = true;
+                };
+                insertBtn.onclick = () => {
+                    addLog("插扫第4页背面，已补充图像。");
+                    window._stepSpecificDone = true;
+                };
+                break;
+            case 'imageopt':
+                container.innerHTML = `
+                    <div class="param-group">
+                        <button class="btn" id="autoDeskew">🔄 自动纠偏/去污</button>
+                        <button class="btn" id="cropMargin">✂️ 批量框外去污</button>
+                    </div>
+                    <div class="tips">图像优化: 纠斜、裁剪、去黑边、调整亮度。实验要求处理故意涂黑点。</div>
+                `;
+                const deskew = container.querySelector('#autoDeskew');
+                const crop = container.querySelector('#cropMargin');
+                deskew.onclick = () => {
+                    addLog("已执行自动纠偏，去除杂点黑边。");
+                    window._stepSpecificDone = true;
+                };
+                crop.onclick = () => {
+                    addLog("批量框外裁剪，去除污渍。");
+                    window._stepSpecificDone = true;
+                };
+                break;
+            case 'input1':
+                container.innerHTML = `
+                    <div class="param-group">
+                        <label>题名: <input id="metaTitle" value="${stepData.metadata.title}"></label>
+                        <label>责任者: <input id="metaCreator" value="${stepData.metadata.creator}"></label>
+                        <label>形成日期: <input id="metaDate" value="${stepData.metadata.date}"></label>
+                        <label>保管期限: <select id="metaRetention"><option>永久</option><option selected>定期30年</option></select></label>
+                    </div>
+                    <button class="btn" id="saveMetadata">💾 保存元数据</button>
+                `;
+                const saveMeta = container.querySelector('#saveMetadata');
+                saveMeta.onclick = () => {
+                    stepData.metadata.title = document.getElementById('metaTitle').value;
+                    stepData.metadata.creator = document.getElementById('metaCreator').value;
+                    stepData.metadata.date = document.getElementById('metaDate').value;
+                    stepData.metadata.retention = document.getElementById('metaRetention').value;
+                    addLog(`元数据一录保存：${stepData.metadata.title}`);
+                    window._stepSpecificDone = true;
+                    saveMeta.disabled = true;
+                };
+                break;
+            case 'input2':
+                container.innerHTML = `
+                    <div class="tips">二录人员需独立录入，故意录错一处（如责任者错）。</div>
+                    <div class="param-group">
+                        <label>题名: <input id="metaTitle2" value="${stepData.metadata.title}"></label>
+                        <label>责任者: <input id="metaCreator2" value="校办室(错误示例)"></label>
+                    </div>
+                    <button class="btn" id="saveSecond">✍️ 提交二录</button>
+                `;
+                const save2 = container.querySelector('#saveSecond');
+                save2.onclick = () => {
+                    stepData.metadata.secondInput = {
+                        title: document.getElementById('metaTitle2').value,
+                        creator: document.getElementById('metaCreator2').value,
+                    };
+                    addLog("二录完成，已故意录入错误责任者（等待校对）。");
+                    window._stepSpecificDone = true;
+                    save2.disabled = true;
+                };
+                break;
+            case 'imgqc':
+                container.innerHTML = `<div class="tips">🔍 图像质检：检查图像是否清晰、顺序正确、有无污损。可退回扫描或优化环节。</div>
+                <button class="btn" id="qcPass">✅ 质检通过</button>`;
+                const qcPass = container.querySelector('#qcPass');
+                qcPass.onclick = () => {
+                    addLog("图像质检合格，无重大问题。");
+                    window._stepSpecificDone = true;
+                    qcPass.disabled = true;
+                };
+                break;
+            case 'doublecheck':
+                const second = stepData.metadata.secondInput || { creator: "校办室" };
+                container.innerHTML = `
+                    <div class="tips">一录责任者: ${stepData.metadata.creator} &nbsp; 二录责任者: ${second.creator}</div>
+                    <div><label>请选择正确的责任者: <select id="correctCreator"><option>${stepData.metadata.creator}</option><option>${second.creator}</option></select></label></div>
+                    <button class="btn" id="fixDouble">✅ 校对确认</button>
+                `;
+                const fixBtn = container.querySelector('#fixDouble');
+                fixBtn.onclick = () => {
+                    const correct = document.getElementById('correctCreator').value;
+                    stepData.metadata.creator = correct;
+                    addLog(`双录校对完成，已修正责任者为：${correct}`);
+                    window._stepSpecificDone = true;
+                    fixBtn.disabled = true;
+                };
+                break;
+            case 'finalqc':
+                container.innerHTML = `<div class="tips">总检：最终审核目录与图像挂接正确性，可批量通过。</div>
+                <button class="btn" id="finalPass">✅ 总检通过，归档</button>`;
+                const finalBtn = container.querySelector('#finalPass');
+                finalBtn.onclick = () => {
+                    addLog("质量检查/总检完成，数字化成果合格，已移交。");
+                    window._stepSpecificDone = true;
+                    finalBtn.disabled = true;
+                };
+                break;
+            case 'sampling':
+                container.innerHTML = `<div class="tips">🎲 质量抽检模拟：抽检率10%，图像和目录均合格。</div>
+                <button class="btn" id="sampleOk">✅ 抽检通过</button>`;
+                const sampleBtn = container.querySelector('#sampleOk');
+                sampleBtn.onclick = () => {
+                    addLog("甲方抽检合格，项目验收通过。");
+                    window._stepSpecificDone = true;
+                    sampleBtn.disabled = true;
+                };
+                break;
+            default: container.innerHTML = `<div>请完成操作后交卷</div>`;
+        }
+        // 重置完成标志
+        window._stepSpecificDone = false;
+        // 监听用户完成动作，在各自操作里置为true，交卷时校验
+    }
+
+    function validateStepCompletion(stepId) {
+        // 必须已经执行过核心动作 (通过全局临时标志)
+        return window._stepSpecificDone === true;
+    }
+
+    // 重置全部流程
+    function resetAll() {
+        if (confirm("重置将清空所有工序进度和模拟数据，确定吗？")) {
+            completed = new Array(steps.length).fill(false);
+            currentStepIdx = 0;
+            initMockData();
+            window._stepSpecificDone = false;
+            renderSteps();
+            renderOperation();
+            addLog("🔄 已重置全部流程，可重新开始练习。");
+            const logPanel = document.getElementById('logPanel');
+            logPanel.innerHTML = '<div class="log-line">✅ 系统重置完成</div><div class="log-line">📌 请从提卷接收开始顺序操作</div>';
+        }
+    }
+
+    document.getElementById('resetProcessBtn').addEventListener('click', resetAll);
+
+    // 初始化
+    renderSteps();
+    renderOperation();
+    addLog("📚 实验预习模拟器已启动，请按指导书顺序依次完成工序。注意：每个环节必须“领卷→执行操作→交卷”。");
+</script>
+</body>
+</html>

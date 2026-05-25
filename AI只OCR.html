@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>🧠 AI · OCR 仿真模拟实验室 (中英文支持)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f5f7fe 0%, #e9ecf5 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+            padding: 20px;
+        }
+
+        .lab-card {
+            max-width: 1300px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 42px;
+            box-shadow: 0 25px 45px -10px rgba(0, 20, 60, 0.25), 
+                        0 0 0 1px rgba(156, 180, 255, 0.2) inset;
+            padding: 28px 30px 35px;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        h1 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 2.2rem;
+            letter-spacing: -0.01em;
+            color: #0b1e3c;
+            margin-bottom: 6px;
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, #2a5cff, #9f7aff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .subhead {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            color: #2c3e66;
+            font-weight: 400;
+            border-bottom: 1px solid rgba(100, 130, 200, 0.15);
+            padding-bottom: 16px;
+        }
+
+        .badge-ai {
+            background: #1e2f5e;
+            color: #bdd0ff;
+            padding: 6px 16px;
+            border-radius: 60px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .main-panel {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 28px;
+        }
+
+        @media (max-width: 780px) {
+            .main-panel {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            .lab-card {
+                padding: 20px 18px;
+            }
+        }
+
+        .image-zone {
+            background: #ffffffc2;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 28px;
+            padding: 22px 20px;
+            box-shadow: 0 10px 20px -5px rgba(30, 40, 80, 0.1), inset 0 0 0 1px rgba(255,255,255,0.8);
+        }
+
+        .preview-container {
+            background: #f2f4fc;
+            border-radius: 24px;
+            padding: 16px;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.02), 0 6px 12px -6px rgba(0,20,50,0.1);
+            border: 1px solid #d9e0f0;
+        }
+
+        .preview-box {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            background: #fdfdfe;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px dashed #a0b8e0;
+            background-image: radial-gradient(circle at 20px 20px, #eef2fa 1px, transparent 1px);
+            background-size: 24px 24px;
+            overflow: hidden;
+            transition: border 0.2s;
+        }
+
+        .preview-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+            border-radius: 12px;
+        }
+
+        .upload-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 20px;
+            align-items: center;
+        }
+
+        .btn {
+            background: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 48px;
+            font-weight: 550;
+            font-size: 0.95rem;
+            color: #1e2f5e;
+            box-shadow: 0 6px 12px -6px rgba(30, 50, 100, 0.15), 0 0 0 1px rgba(70, 110, 200, 0.15);
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.9);
+        }
+
+        .btn-primary {
+            background: #1a2f5e;
+            color: white;
+            box-shadow: 0 10px 18px -8px #0f2b5e70, 0 0 0 1px #2f60b0 inset;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #23457a;
+            transform: scale(1.01);
+            box-shadow: 0 14px 22px -10px #102a50;
+        }
+
+        .btn-outline {
+            background: transparent;
+            box-shadow: 0 0 0 1px #b7c6e6 inset;
+        }
+
+        .btn-outline:hover {
+            background: #eef3ff;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .sample-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .sample-btn {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            background: #eef2fe;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            border: 1px solid #cbd6f0;
+        }
+
+        .ai-panel {
+            background: #ffffffd6;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 28px;
+            padding: 22px 24px;
+            box-shadow: 0 12px 24px -12px rgba(0,20,50,0.2), inset 0 0 0 1px #ffffff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .ai-icon {
+            background: #1e3c72;
+            color: white;
+            width: 42px;
+            height: 42px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 8px 12px -6px #1e3c7250;
+        }
+
+        .ai-title {
+            font-weight: 650;
+            font-size: 1.4rem;
+            color: #0a1a38;
+        }
+
+        .progress-area {
+            margin: 8px 0 18px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #2c3e66;
+            margin-bottom: 6px;
+        }
+
+        progress {
+            width: 100%;
+            height: 12px;
+            border-radius: 20px;
+            overflow: hidden;
+            border: none;
+            background: #d9e2fc;
+        }
+        progress::-webkit-progress-bar { background: #d9e2fc; border-radius: 20px; }
+        progress::-webkit-progress-value { background: linear-gradient(90deg, #2a5cff, #8b6ef0); border-radius: 20px; }
+        progress::-moz-progress-bar { background: linear-gradient(90deg, #2a5cff, #8b6ef0); border-radius: 20px; }
+
+        .confidence-meter {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 16px 0 10px;
+        }
+        .confidence-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(145deg, #0d2549, #2b4780);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .confidence-label {
+            color: #415a8c;
+        }
+
+        .result-box {
+            background: #f5f9ff;
+            border-radius: 20px;
+            padding: 20px 18px;
+            flex: 1;
+            border: 1px solid #cedcff;
+            box-shadow: inset 0 2px 5px #00000008;
+            margin: 10px 0 5px;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #4f6599;
+            margin-bottom: 8px;
+        }
+
+        .recognized-text {
+            font-size: 1.3rem;
+            line-height: 1.5;
+            font-weight: 500;
+            color: #0b1e3c;
+            word-break: break-word;
+            white-space: pre-wrap;
+            max-height: 180px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .recognized-text:empty::before {
+            content: "✨ 点击「开始识别」，AI 将提取文字…";
+            color: #7e95c2;
+            font-weight: 400;
+            font-style: italic;
+            font-size: 1rem;
+        }
+
+        .meta-info {
+            display: flex;
+            gap: 18px;
+            font-size: 0.9rem;
+            color: #3e5588;
+            margin-top: 12px;
+            border-top: 1px dashed #b7c8ec;
+            padding-top: 16px;
+        }
+
+        .footer-note {
+            margin-top: 18px;
+            color: #49629e;
+            font-size: 0.85rem;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .icon-small {
+            opacity: 0.8;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .drag-active .preview-box {
+            border: 2px solid #2a5cff;
+            background: #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+
+<div class="lab-card">
+    <h1>
+        <span>🤖 AI · OCR</span> 
+        <span style="font-size: 1.2rem; margin-left: auto; opacity: 0.7;">仿真模拟实验 (中英双语)</span>
+    </h1>
+    <div class="subhead">
+        <div>📸 上传图片 · 体验神经网络文字识别</div>
+        <div class="badge-ai">⚡ Tesseract.js 中英文支持</div>
+    </div>
+
+    <div class="main-panel">
+        <!-- 左侧图像区 -->
+        <div class="image-zone" id="dropZone">
+            <div class="preview-container">
+                <div class="preview-box" id="previewBox">
+                    <img id="previewImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240' viewBox='0 0 400 240'%3E%3Crect width='400' height='240' fill='%23f4f7fd'/%3E%3Ctext x='40' y='120' font-family='Segoe UI, sans-serif' font-size='28' fill='%23365a9c' font-weight='500'%3E🖼️ 上传图片或选择示例%3C/text%3E%3Ctext x='80' y='160' font-family='Segoe UI' font-size='16' fill='%236688cc'%3EAI 将识别其中的文字%3C/text%3E%3C/svg%3E" alt="预览区域，等待上传">
+                </div>
+            </div>
+            <div class="upload-actions">
+                <button class="btn btn-primary" id="uploadBtn">📂 上传图片</button>
+                <button class="btn btn-outline" id="recognizeBtn">🔍 开始识别 (AI)</button>
+                <div class="sample-group">
+                    <button class="btn sample-btn" data-sample="english">🇬🇧 英文段落</button>
+                    <button class="btn sample-btn" data-sample="digits">🔢 数字/代码</button>
+                    <button class="btn sample-btn" data-sample="mixed">🌐 混合文本</button>
+                </div>
+            </div>
+            <input type="file" id="fileInput" accept="image/png, image/jpeg, image/webp, image/bmp, image/tiff">
+            <div style="margin-top: 12px; font-size: 0.8rem; color: #5570a5; padding-left: 8px;">
+                ⭐ 支持拖拽图片到此区域 · 建议清晰文字（中英文均可）
+            </div>
+        </div>
+
+        <!-- 右侧AI识别面板 -->
+        <div class="ai-panel">
+            <div class="ai-header">
+                <div class="ai-icon">🧬</div>
+                <div class="ai-title">AI 识别引擎</div>
+            </div>
+            <div class="progress-area">
+                <div class="status-bar">
+                    <span id="statusMessage">⚪ 等待指令</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <progress id="ocrProgress" value="0" max="100"></progress>
+            </div>
+            
+            <div class="confidence-meter">
+                <span class="confidence-label">平均置信度</span>
+                <span class="confidence-value" id="confidenceDisplay">—</span>
+            </div>
+
+            <div class="result-box">
+                <div class="result-label">📋 识别结果 (AI 提取)</div>
+                <div class="recognized-text" id="recognizedText"></div>
+            </div>
+
+            <div class="meta-info">
+                <div>⏱️ 耗时: <span id="timeElapsed">0.00</span> s</div>
+                <div>📐 图片尺寸: <span id="imageSize">—</span></div>
+                <button id="copyResultBtn" class="btn-outline" style="padding: 6px 16px; margin-left: auto; font-size:0.8rem;">📋 复制结果</button>
+            </div>
+            <div class="footer-note">
+                <span>✨ 支持中文、英文、数字混合识别</span>
+                <span style="margin-left: auto;">🧪 首次加载约15MB语言包</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 使用稳定 CDN 加载 Tesseract.js -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<script>
+    (function(){
+        "use strict";
+
+        // 检测库是否加载成功
+        if (typeof Tesseract === 'undefined') {
+            alert('❌ Tesseract 库加载失败，请检查网络或刷新重试。');
+            document.addEventListener('DOMContentLoaded', function() {
+                const btn = document.getElementById('recognizeBtn');
+                if(btn) btn.disabled = true;
+                document.getElementById('statusMessage').textContent = '❌ 库未加载';
+            });
+            return;
+        }
+
+        // DOM 元素
+        const previewImg = document.getElementById('previewImg');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const recognizeBtn = document.getElementById('recognizeBtn');
+        const dropZone = document.getElementById('dropZone');
+        const previewBox = document.getElementById('previewBox');
+        
+        const statusMessage = document.getElementById('statusMessage');
+        const progressPercent = document.getElementById('progressPercent');
+        const ocrProgress = document.getElementById('ocrProgress');
+        const confidenceDisplay = document.getElementById('confidenceDisplay');
+        const recognizedTextDiv = document.getElementById('recognizedText');
+        const timeElapsedSpan = document.getElementById('timeElapsed');
+        const imageSizeSpan = document.getElementById('imageSize');
+        const copyResultBtn = document.getElementById('copyResultBtn');
+
+        let currentImageElement = previewImg;
+        let worker = null;
+        let isRecognizing = false;
+        let currentObjectURL = null;
+
+        function updateImageSizeDisplay() {
+            if (!previewImg.complete || !previewImg.naturalWidth) {
+                imageSizeSpan.textContent = '—';
+                return;
+            }
+            imageSizeSpan.textContent = `${previewImg.naturalWidth} × ${previewImg.naturalHeight}`;
+        }
+
+        previewImg.addEventListener('load', updateImageSizeDisplay);
+        if (previewImg.complete) updateImageSizeDisplay();
+
+        function revokeCurrentObjectURL() {
+            if (currentObjectURL) {
+                URL.revokeObjectURL(currentObjectURL);
+                currentObjectURL = null;
+            }
+        }
+
+        function setPreviewImage(source) {
+            revokeCurrentObjectURL();
+            if (source instanceof File) {
+                const url = URL.createObjectURL(source);
+                currentObjectURL = url;
+                previewImg.src = url;
+            } else {
+                previewImg.src = source;
+            }
+            statusMessage.textContent = '🖼️ 图片已加载，点击「开始识别」';
+            progressPercent.textContent = '0%';
+            ocrProgress.value = 0;
+        }
+
+        function generateSampleImage(type) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 700;
+            canvas.height = 300;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#e0e8f5';
+            ctx.lineWidth = 1;
+            for (let i=0; i<canvas.width; i+= 30) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.strokeStyle = '#eaeef9';
+                ctx.stroke();
+            }
+            ctx.font = '500 36px "Segoe UI", "Roboto", "Courier New", monospace';
+            ctx.fillStyle = '#0b1e3c';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            let textLines = [];
+            if (type === 'english') {
+                textLines = ['Artificial Intelligence', 'OCR Simulation Lab', 'Machine Learning 2026'];
+                ctx.font = '500 38px "Segoe UI", "Roboto", sans-serif';
+            } else if (type === 'digits') {
+                textLines = ['编号：2026-04-23', '得分：98.75%', '数值 = 3.141592'];
+                ctx.font = '500 36px "Courier New", monospace';
+            } else {
+                textLines = ['人工智能 · AI识别', '中 English 混合测试', '准确率 Confidence: 0.987'];
+                ctx.font = '500 36px "Segoe UI", "Microsoft YaHei", sans-serif';
+            }
+            ctx.fillStyle = '#13294b';
+            let yPos = 100;
+            const lineHeight = 58;
+            for (let line of textLines) {
+                ctx.fillText(line, canvas.width/2, yPos);
+                yPos += lineHeight;
+            }
+            ctx.fillStyle = '#aab9d6';
+            ctx.font = '20px sans-serif';
+            ctx.fillText('⚡', 50, 50);
+            return canvas.toDataURL('image/png');
+        }
+
+        document.querySelectorAll('[data-sample]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const type = btn.dataset.sample;
+                const dataUrl = generateSampleImage(type);
+                setPreviewImage(dataUrl);
+                recognizedTextDiv.textContent = '';
+                confidenceDisplay.textContent = '—';
+                timeElapsedSpan.textContent = '0.00';
+                statusMessage.textContent = '📌 示例图片已加载，可开始识别';
+            });
+        });
+
+        uploadBtn.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            const file = fileInput.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                alert('请选择图片文件 (PNG, JPEG, WEBP等)');
+                return;
+            }
+            setPreviewImage(file);
+            recognizedTextDiv.textContent = '';
+            confidenceDisplay.textContent = '—';
+        });
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        dropZone.addEventListener('dragenter', () => previewBox.classList.add('drag-active'));
+        dropZone.addEventListener('dragleave', () => previewBox.classList.remove('drag-active'));
+        dropZone.addEventListener('drop', (e) => {
+            previewBox.classList.remove('drag-active');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type.startsWith('image/')) {
+                    setPreviewImage(file);
+                    recognizedTextDiv.textContent = '';
+                    confidenceDisplay.textContent = '—';
+                    fileInput.files = files;
+                } else {
+                    alert('请拖入图片文件');
+                }
+            }
+        });
+
+        // ---------- 初始化 Tesseract Worker (支持中文) ----------
+        async function initWorker() {
+            if (worker) return worker;
+            statusMessage.textContent = '🧠 正在加载 AI 模型 (首次需下载中英文语言包，约15MB) ...';
+            try {
+                // 关键：创建 worker 时传入数组 ['eng', 'chi_sim']，同时加载英文和简体中文
+                worker = await Tesseract.createWorker(['eng', 'chi_sim'], 1, {
+                    logger: progressUpdate => {
+                        if (progressUpdate.status === 'recognizing text') {
+                            const progress = progressUpdate.progress || 0;
+                            const percent = Math.round(progress * 100);
+                            ocrProgress.value = percent;
+                            progressPercent.textContent = `${percent}%`;
+                            statusMessage.textContent = `🔎 AI 识别中... ${progressUpdate.status}`;
+                        } else {
+                            statusMessage.textContent = `🧬 ${progressUpdate.status}`;
+                        }
+                    }
+                });
+                statusMessage.textContent = '✅ AI 模型就绪 (中英文)';
+                return worker;
+            } catch (err) {
+                statusMessage.textContent = '❌ 模型加载失败，请检查网络';
+                console.error(err);
+                throw err;
+            }
+        }
+
+        async function performOCR() {
+            if (isRecognizing) {
+                alert('识别正在进行中，请稍后…');
+                return;
+            }
+            if (!previewImg.complete || previewImg.naturalWidth === 0) {
+                alert('图片尚未加载完成');
+                return;
+            }
+
+            isRecognizing = true;
+            recognizeBtn.disabled = true;
+            const startTime = performance.now();
+            
+            recognizedTextDiv.textContent = '';
+            confidenceDisplay.textContent = '—';
+            timeElapsedSpan.textContent = '...';
+            ocrProgress.value = 0;
+            progressPercent.textContent = '0%';
+            statusMessage.textContent = '⚙️ 初始化 AI 引擎...';
+
+            try {
+                const tessWorker = await initWorker();
+                statusMessage.textContent = '📡 AI 正在分析图像特征…';
+                const result = await tessWorker.recognize(previewImg);
+                
+                const endTime = performance.now();
+                const elapsed = ((endTime - startTime) / 1000).toFixed(2);
+                timeElapsedSpan.textContent = elapsed;
+
+                const { text, confidence } = result.data;
+                
+                recognizedTextDiv.textContent = text.trim() || '(未检测到文字)';
+                const confPercent = confidence ? (confidence).toFixed(1) : '—';
+                confidenceDisplay.textContent = confidence ? `${confPercent}%` : '—';
+                
+                statusMessage.textContent = '✨ 识别完成 · AI 仿真实验成功';
+                ocrProgress.value = 100;
+                progressPercent.textContent = '100%';
+                
+                console.log(`[AI OCR] 置信度: ${confidence}, 文本长度: ${text.length}`);
+                
+            } catch (error) {
+                console.error('OCR错误:', error);
+                statusMessage.textContent = '❌ 识别出错，可尝试更换图片';
+                alert('识别失败: ' + (error.message || '未知错误'));
+                timeElapsedSpan.textContent = '0.00';
+                ocrProgress.value = 0;
+            } finally {
+                isRecognizing = false;
+                recognizeBtn.disabled = false;
+            }
+        }
+
+        recognizeBtn.addEventListener('click', performOCR);
+
+        copyResultBtn.addEventListener('click', () => {
+            const text = recognizedTextDiv.textContent;
+            if (!text || text === '✨ 点击「开始识别」，AI 将提取文字…') {
+                alert('暂无识别结果可复制');
+                return;
+            }
+            navigator.clipboard?.writeText(text).then(() => {
+                const original = copyResultBtn.textContent;
+                copyResultBtn.textContent = '✅ 已复制';
+                setTimeout(() => copyResultBtn.textContent = original, 1500);
+            }).catch(() => alert('复制失败，手动复制吧'));
+        });
+
+        window.addEventListener('beforeunload', async () => {
+            if (worker) {
+                try { await worker.terminate(); } catch (e) {}
+            }
+            revokeCurrentObjectURL();
+        });
+
+        updateImageSizeDisplay();
+    })();
+</script>
+</body>
+</html>

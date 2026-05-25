@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>档案管理系统进阶实验模拟器 | 借阅审批 + 自定义门类</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #f1f5f9; font-family: 'Segoe UI', system-ui; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #1e3a5f, #2c5282); color: white; padding: 20px; border-radius: 28px; margin-bottom: 24px; }
+        .badge { background: #fbbf24; color: #1e293b; padding: 4px 12px; border-radius: 40px; font-size: 0.8rem; }
+        .two-columns { display: flex; gap: 24px; flex-wrap: wrap; }
+        .main-panel { flex: 2.5; }
+        .side-panel { flex: 1.2; }
+        .card { background: white; border-radius: 24px; padding: 20px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .card-title { font-size: 1.2rem; font-weight: 700; border-left: 5px solid #2c5282; padding-left: 14px; margin-bottom: 16px; }
+        .btn { background: #2c5282; border: none; color: white; padding: 8px 18px; border-radius: 30px; font-weight: 600; cursor: pointer; }
+        .btn-sm { padding: 5px 12px; font-size: 0.75rem; }
+        .btn-outline { background: white; border: 1px solid #2c5282; color: #2c5282; }
+        .form-group { margin-bottom: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+        .form-group label { width: 120px; font-weight: 600; }
+        input, select { padding: 6px 10px; border-radius: 12px; border: 1px solid #cbd5e1; flex: 1; }
+        .log-area { background: #1e293b; color: #cbd5e6; border-radius: 16px; padding: 12px; font-family: monospace; font-size: 0.7rem; height: 300px; overflow-y: auto; }
+        .approval-flow { background: #f8fafc; border-radius: 20px; padding: 12px; margin: 12px 0; }
+        .flow-node { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+        .tips { background: #fef9e3; border-left: 4px solid #f59e0b; padding: 8px 12px; border-radius: 12px; margin: 12px 0; font-size: 0.8rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
+        th { background: #f1f5f9; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>⚙️ 档案管理系统进阶实验模拟器 <span class="badge">借阅审批 + 自定义门类</span></h1>
+        <div>普通用户发起借阅 → 组长启用流程 → 全员审批 → 水印查看 | 自定义文件类型/档案门类 & 归档映射</div>
+    </div>
+
+    <div class="two-columns">
+        <div class="main-panel">
+            <!-- 借阅审批模块 -->
+            <div class="card">
+                <div class="card-title">📖 借阅审批流程模拟</div>
+                <div class="flex-between" style="display:flex; justify-content:space-between; flex-wrap:wrap;">
+                    <div><strong>当前角色：</strong>
+                        <select id="roleSelect">
+                            <option value="user">普通用户（档案查询人员）</option>
+                            <option value="leader" selected>组长（审批流程管理者）</option>
+                            <option value="approver1">审批人1（张翠山）</option>
+                            <option value="approver2">审批人2（殷素素）</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-sm" id="createApprovalFlowBtn">➕ 创建本组借阅审批流程</button>
+                </div>
+                <div class="tips">📌 实验要点：普通用户检索档案→发起借阅→组长在“电子借阅”中启用流程→各审批人依次审批→最终可查看原文（带水印）。</div>
+                <div id="borrowSection">
+                    <!-- 动态内容 -->
+                </div>
+            </div>
+
+            <!-- 自定义文件类型/档案门类模块 -->
+            <div class="card">
+                <div class="card-title">🏷️ 自定义文件类型 & 档案门类（归档映射）</div>
+                <div class="tips">📌 依据指导书：新增文件类型（如“第20组张三丰电子公文”）→配置数据项/数据字典→新增档案门类→归档设置映射→实际收集归档→上架。</div>
+                <div id="customTypeSection">
+                    <button class="btn btn-sm" id="addFileTypeBtn">+ 新增文件类型（本人电子公文）</button>
+                    <button class="btn btn-sm" id="addArchiveTypeBtn">+ 新增档案门类（本人电子档案）</button>
+                    <button class="btn btn-sm" id="mapArchiveBtn">📎 归档设置（映射）</button>
+                    <div id="customStatus" style="margin-top: 15px; font-size:0.8rem;"></div>
+                    <hr style="margin: 15px 0;">
+                    <div><strong>模拟文件收集（自定义门类）</strong></div>
+                    <div id="customFileList"></div>
+                    <button class="btn btn-sm" id="addCustomFile">📄 添加一份自定义文件</button>
+                    <button class="btn btn-sm" id="archiveCustomFile">📦 归档到自定义档案门类</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            <div class="card">
+                <div class="card-title">📜 实验日志</div>
+                <div class="log-area" id="logPanel">
+                    <div>✅ 模拟器就绪，请按进阶实验要点操作</div>
+                </div>
+                <button id="clearLogBtn" class="btn btn-sm" style="margin-top:10px; background:#475569;">清空日志</button>
+            </div>
+            <div class="card">
+                <div class="card-title">📘 操作要点速记</div>
+                <ul style="font-size:0.75rem; margin-left:18px;">
+                    <li>借阅审批：普通用户→借阅申请→组长启用流程→依次审批→同意后带水印查看</li>
+                    <li>自定义门类：文件类型（新增元数据+数据字典）→档案门类（档号格式）→归档映射→收集归档→库房上架</li>
+                    <li>实验报告需包含审批记录截图、上架目录截图</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 模拟数据
+    let archivesForBorrow = [
+        { id: "A001", title: "数字档案馆建设实施方案", creator: "信息化处", hasPdf: true, location: "第20组-A01" },
+        { id: "A002", title: "关于2025年档案数字化工作的通知", creator: "校办", hasPdf: true, location: "第20组-A02" }
+    ];
+    let borrowRequests = []; // 借阅申请
+    let approvalFlow = [];   // 审批流程人员列表
+    let currentRole = "leader";
+    let customFileType = null;   // { name, dataItems, dicts }
+    let customArchiveType = null; // { name, dataItems, archiveRule }
+    let customFiles = [];
+    let customArchives = [];
+
+    function addLog(msg, isError = false) {
+        const logDiv = document.getElementById('logPanel');
+        const entry = document.createElement('div');
+        entry.innerHTML = `🕒 ${new Date().toLocaleTimeString()} ${msg}`;
+        entry.style.color = isError ? '#f87171' : '#a5f3fc';
+        logDiv.appendChild(entry);
+        logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    // 渲染借阅界面
+    function renderBorrowSection() {
+        const container = document.getElementById('borrowSection');
+        if (currentRole === 'user') {
+            container.innerHTML = `
+                <div class="tips">🔍 普通用户：检索档案并发起借阅</div>
+                <table>
+                    <thead><tr><th>档号</th><th>题名</th><th>责任者</th><th>原文</th><th>操作</th></tr></thead>
+                    <tbody>
+                        ${archivesForBorrow.map(a => `
+                            <tr><td>${a.id}</td><td>${a.title}</td><td>${a.creator}</td><td>${a.hasPdf ? 'PDF' : '无'}</td>
+                            <td><button class="btn-sm" data-id="${a.id}" data-action="borrow">📖 借阅</button></td></tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div id="userRequests"></div>
+            `;
+            document.querySelectorAll('[data-action="borrow"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    const file = archivesForBorrow.find(a => a.id === id);
+                    if (file) {
+                        borrowRequests.push({ id: Date.now(), fileId: file.id, title: file.title, requester: "普通用户", status: "待审核", flowEnabled: false, approvals: [] });
+                        addLog(`📨 普通用户发起借阅申请：${file.title}，等待组长启用审批流程。`);
+                        renderBorrowSection();
+                    }
+                });
+            });
+        } 
+        else if (currentRole === 'leader') {
+            container.innerHTML = `
+                <div><strong>📋 电子借阅管理（组长）</strong></div>
+                <div class="tips">组长需在“业务管理-电子借阅”中找到待审核申请，启用本组审批流程。</div>
+                <table>
+                    <thead><tr><th>申请档案</th><th>申请人</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        ${borrowRequests.filter(r => !r.flowEnabled).map(r => `
+                            <tr><td>${r.title}</td><td>${r.requester}</td><td>待启用流程</td>
+                            <td><button class="btn-sm" data-id="${r.id}" data-action="enableFlow">启用审批流程</button></td></tr>
+                        `).join('')}
+                        ${borrowRequests.filter(r => r.flowEnabled).map(r => `
+                            <tr><td>${r.title}</td><td>${r.requester}</td><td>审核中 (${r.approvals.length}/${approvalFlow.length})</td>
+                            <td>查看流程</td></tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div class="approval-flow" id="flowConfigStatus">当前流程配置：${approvalFlow.length ? approvalFlow.join(' → ') : '未创建'}</div>
+                <button id="createFlowBtn" class="btn-sm">配置审批流程（添加组员）</button>
+            `;
+            document.querySelectorAll('[data-action="enableFlow"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    let reqId = parseInt(btn.dataset.id);
+                    let req = borrowRequests.find(r => r.id === reqId);
+                    if (req && approvalFlow.length) {
+                        req.flowEnabled = true;
+                        req.status = "审核中";
+                        req.approvals = [];
+                        req.nextApproverIndex = 0;
+                        addLog(`🔓 组长已启用借阅审批流程，当前第一个审批人：${approvalFlow[0]}`);
+                        renderBorrowSection();
+                    } else {
+                        addLog("请先创建审批流程（添加组员）", true);
+                    }
+                });
+            });
+            document.getElementById('createFlowBtn')?.addEventListener('click', () => {
+                let newFlow = prompt("输入审批人姓名，用逗号隔开（如：张翠山,殷素素,张三丰）", "张翠山,殷素素");
+                if (newFlow) {
+                    approvalFlow = newFlow.split(/[,，]+/).map(s => s.trim());
+                    addLog(`✅ 借阅审批流程已创建：${approvalFlow.join(' → ')}`);
+                    renderBorrowSection();
+                }
+            });
+        }
+        else { // 审批人角色
+            let pending = borrowRequests.filter(r => r.flowEnabled && r.status === "审核中" && r.nextApproverIndex < approvalFlow.length && approvalFlow[r.nextApproverIndex] === currentRole);
+            container.innerHTML = `
+                <div><strong>📬 我的待审批（${currentRole}）</strong></div>
+                ${pending.length ? pending.map(r => `
+                    <div class="approval-flow">
+                        <div>申请档案：${r.title}  申请人：${r.requester}</div>
+                        <button class="btn-sm" data-id="${r.id}" data-action="approve">✅ 同意借阅</button>
+                        <button class="btn-sm" data-id="${r.id}" data-action="reject">❌ 拒绝</button>
+                        <div style="font-size:0.7rem;">审批意见：<input type="text" id="opinion_${r.id}" placeholder="可选"></div>
+                    </div>
+                `).join('') : '<div>暂无待审批任务</div>'}
+            `;
+            document.querySelectorAll('[data-action="approve"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    let reqId = parseInt(btn.dataset.id);
+                    let req = borrowRequests.find(r => r.id === reqId);
+                    if (req) {
+                        let opinion = document.getElementById(`opinion_${reqId}`)?.value || "同意";
+                        req.approvals.push({ approver: currentRole, opinion, time: new Date() });
+                        req.nextApproverIndex++;
+                        if (req.nextApproverIndex >= approvalFlow.length) {
+                            req.status = "已批准";
+                            addLog(`🎉 借阅申请已全部审批通过，普通用户可查看原文（带水印：第20组珍藏档案）。`);
+                        } else {
+                            addLog(`✅ ${currentRole} 审批通过，下一个审批人：${approvalFlow[req.nextApproverIndex]}`);
+                        }
+                        renderBorrowSection();
+                    }
+                });
+            });
+        }
+    }
+
+    // 自定义门类模拟
+    let customFileTypeCreated = false;
+    let customArchiveTypeCreated = false;
+    let mappingConfigured = false;
+
+    document.getElementById('addFileTypeBtn')?.addEventListener('click', () => {
+        customFileTypeCreated = true;
+        document.getElementById('customStatus').innerHTML = `<div class="tips">✅ 已创建文件类型：第20组张三丰电子公文。已新增元数据“文件大小”(小数)、签收人数据字典(第20组签收人)。</div>`;
+        addLog("📁 自定义文件类型创建成功，包含文件大小、签收人下拉字典。");
+    });
+    document.getElementById('addArchiveTypeBtn')?.addEventListener('click', () => {
+        customArchiveTypeCreated = true;
+        document.getElementById('customStatus').innerHTML += `<div>✅ 已创建档案门类：第20组张三丰电子档案。档号格式：全宗+机构+年度+保管期限+件号。新增元数据“归档人”“档案大小”。</div>`;
+        addLog("🏛️ 自定义档案门类创建成功，档号格式已配置。");
+    });
+    document.getElementById('mapArchiveBtn')?.addEventListener('click', () => {
+        if (customFileTypeCreated && customArchiveTypeCreated) {
+            mappingConfigured = true;
+            addLog("🔗 归档映射完成：签收人 → 归档人，类别 → 机构(问题)");
+            document.getElementById('customStatus').innerHTML += `<div>✅ 归档映射已设置，现在可以收集文件并归档。</div>`;
+        } else {
+            addLog("请先创建文件类型和档案门类", true);
+        }
+    });
+
+    function renderCustomFiles() {
+        const container = document.getElementById('customFileList');
+        container.innerHTML = `
+            <table>
+                <thead><tr><th>题名</th><th>签收人</th><th>文件大小(MB)</th><th>原文</th></tr></thead>
+                <tbody>
+                    ${customFiles.map((f, idx) => `<tr><td>${f.title}</td><td>${f.signer}</td><td>${f.fileSize}</td><td>PDF模拟</td></tr>`).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    document.getElementById('addCustomFile')?.addEventListener('click', () => {
+        if (!customFileTypeCreated) { addLog("请先创建文件类型", true); return; }
+        let title = prompt("请输入文件题名", "自定义电子公文示例");
+        if (title) {
+            customFiles.push({ title, signer: "张三丰", fileSize: "1.2", hasPdf: true });
+            renderCustomFiles();
+            addLog(`📄 添加自定义文件：${title}`);
+        }
+    });
+
+    document.getElementById('archiveCustomFile')?.addEventListener('click', () => {
+        if (!mappingConfigured) { addLog("请先完成归档映射", true); return; }
+        if (customFiles.length === 0) { addLog("没有可归档的文件", true); return; }
+        for (let f of customFiles) {
+            let danghao = `0020-办公室-2025-永久-${Math.floor(Math.random()*100)}`;
+            customArchives.push({ ...f, danghao, location: "未上架" });
+        }
+        addLog(`📦 已将 ${customFiles.length} 份自定义文件归档到“第20组张三丰电子档案”，档号已生成。`);
+        customFiles = [];
+        renderCustomFiles();
+        // 模拟上架
+        if (customArchives.length) {
+            addLog("🏢 库房上架：所有档案存放位置设为 第20组-A01柜格");
+            customArchives.forEach(a => a.location = "第20组-A01");
+        }
+    });
+
+    // 角色切换
+    document.getElementById('roleSelect')?.addEventListener('change', (e) => {
+        currentRole = e.target.value;
+        renderBorrowSection();
+    });
+    document.getElementById('clearLogBtn')?.addEventListener('click', () => {
+        document.getElementById('logPanel').innerHTML = '<div>日志已清空</div>';
+    });
+
+    // 初始化
+    function init() {
+        renderBorrowSection();
+        addLog("进阶实验模拟器启动，可练习借阅审批流程和自定义门类归档。");
+    }
+    init();
+</script>
+</body>
+</html>

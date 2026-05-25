@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>档案管理系统基本实验模拟器 | GB/T 39784-2021</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #eef2f5;
+            font-family: 'Segoe UI', 'Microsoft YaHei', system-ui;
+            padding: 20px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        /* 头部 */
+        .header {
+            background: linear-gradient(135deg, #0f3b2c, #1e6b4c);
+            color: white;
+            padding: 18px 24px;
+            border-radius: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            background: #facc15;
+            color: #1e293b;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        /* 双栏 */
+        .two-columns {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+        .main-panel {
+            flex: 2.5;
+            min-width: 280px;
+        }
+        .side-panel {
+            flex: 1.2;
+            min-width: 260px;
+        }
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            border-left: 5px solid #1e6b4c;
+            padding-left: 14px;
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .step-progress {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .step-node {
+            background: #f1f5f9;
+            padding: 10px 16px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #e2e8f0;
+        }
+        .step-node.active {
+            background: #1e6b4c;
+            color: white;
+            border-color: #1e6b4c;
+        }
+        .step-node.completed {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: #10b981;
+        }
+        .mock-table {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 8px 10px;
+            text-align: left;
+        }
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+        }
+        .btn {
+            background: #1e6b4c;
+            border: none;
+            color: white;
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.8rem;
+        }
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 0.75rem;
+        }
+        .btn-outline {
+            background: white;
+            border: 1px solid #1e6b4c;
+            color: #1e6b4c;
+        }
+        .form-row {
+            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-row label {
+            width: 100px;
+            font-weight: 600;
+        }
+        input, select {
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            flex: 1;
+            min-width: 160px;
+        }
+        .log-area {
+            background: #1e293b;
+            color: #cbd5e6;
+            border-radius: 20px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.7rem;
+            height: 320px;
+            overflow-y: auto;
+        }
+        .log-line {
+            margin-bottom: 6px;
+            border-left: 2px solid #10b981;
+            padding-left: 8px;
+        }
+        .tips {
+            background: #fef9e3;
+            border-left: 4px solid #f59e0b;
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin: 15px 0;
+            font-size: 0.8rem;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.7rem;
+            color: #64748b;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>
+            🗄️ 档案管理系统基本实验模拟器
+            <span class="badge">GB/T 39784-2021</span>
+        </h1>
+        <div>文件收集 → 预归档 → 审核归档 → 正式库 → 库房上架 | 预习操作要点</div>
+    </div>
+
+    <div class="two-columns">
+        <!-- 主区域 -->
+        <div class="main-panel">
+            <div class="card">
+                <div class="card-title">
+                    <span>📋 核心业务流程</span>
+                    <span id="currentRole" style="font-size:0.75rem; background:#e2e8f0; padding:4px 10px; border-radius:20px;">👤 登录: g20-组长-张三丰</span>
+                </div>
+                <div class="step-progress" id="stepProgress"></div>
+                <div id="stepContent">
+                    <!-- 动态渲染当前步骤的操作界面 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 侧边栏 -->
+        <div class="side-panel">
+            <div class="card">
+                <div class="card-title">📌 实验要点</div>
+                <ul style="margin-left: 20px; font-size:0.8rem; line-height:1.5;">
+                    <li>全宗号：组号补零（如0020）</li>
+                    <li>登记号格式：2位组号+3位流水（20001）</li>
+                    <li>档号自动生成：全宗+年度+保管期限+机构+件号</li>
+                    <li>必须挂接PDF原文才能加盖档号章</li>
+                    <li>预归档→审核→正式归档→库房上架（密集架）</li>
+                    <li>实验报告需提交目录截图+操作日志</li>
+                </ul>
+            </div>
+            <div class="card">
+                <div class="card-title">📜 操作日志</div>
+                <div class="log-area" id="logPanel">
+                    <div class="log-line">✅ 模拟器已启动，请按流程顺序操作</div>
+                </div>
+                <button class="btn btn-sm" id="clearLog" style="margin-top:10px; background:#475569;">清空日志</button>
+            </div>
+        </div>
+    </div>
+    <footer>📚 基于《档案管理系统基本实验指导书2024》开发 | 课前预习使用，实际以华宇万维系统为准</footer>
+</div>
+
+<script>
+    // 模拟数据
+    let files = [];  // 文件收集区（收文）
+    let prearchives = []; // 预归档库
+    let archives = [];    // 正式档案库
+    let currentStep = 0;  // 0:文件收集, 1:预归档, 2:审核归档, 3:正式库上架
+    let stepCompleted = [false, false, false, false];
+    let groupNo = "20";
+    let groupFullNo = "0020";
+    let currentUser = "g20-组长-张三丰";
+    let nextSerial = 1; // 登记号流水
+
+    // 初始化示例文件（每个同学自备，此处模拟）
+    function initDemo() {
+        files = [
+            { id: "1", title: "关于2025年档案数字化工作的通知", creator: "校长办公室", date: "2025-03-10", docNo: "校办发〔2025〕8号", registerNo: "20001", status: "未归档", fileSize: "1.2MB", originalFile: "demo.pdf", hasPdf: true },
+            { id: "2", title: "数字档案馆建设方案", creator: "信息化处", date: "2025-02-20", docNo: "信息〔2025〕12号", registerNo: "20002", status: "未归档", fileSize: "2.3MB", originalFile: "demo2.pdf", hasPdf: true }
+        ];
+        prearchives = [];
+        archives = [];
+        stepCompleted = [false, false, false, false];
+        currentStep = 0;
+        nextSerial = 3;
+        addLog("📁 初始化完成：已有2份待归档文件（收文）。");
+    }
+
+    function addLog(msg) {
+        const logDiv = document.getElementById('logPanel');
+        const entry = document.createElement('div');
+        entry.className = 'log-line';
+        entry.innerHTML = `🕒 ${new Date().toLocaleTimeString()} ${msg}`;
+        logDiv.appendChild(entry);
+        logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    // 渲染步骤导航
+    function renderSteps() {
+        const steps = ["📄 文件收集", "📥 预归档库", "✅ 审核归档", "🏢 正式库&上架"];
+        const container = document.getElementById('stepProgress');
+        container.innerHTML = steps.map((s, idx) => `
+            <div class="step-node ${idx === currentStep ? 'active' : ''} ${stepCompleted[idx] ? 'completed' : ''}" data-step="${idx}">
+                ${s}
+            </div>
+        `).join('');
+        document.querySelectorAll('.step-node').forEach(el => {
+            el.addEventListener('click', () => {
+                if (el.dataset.step <= currentStep || stepCompleted[el.dataset.step-1]) {
+                    currentStep = parseInt(el.dataset.step);
+                    renderSteps();
+                    renderStepContent();
+                } else {
+                    addLog(`⚠️ 请先完成前序步骤再进入「${steps[el.dataset.step]}」`, true);
+                }
+            });
+        });
+    }
+
+    // 根据当前步骤渲染操作界面
+    function renderStepContent() {
+        const container = document.getElementById('stepContent');
+        if (currentStep === 0) {
+            container.innerHTML = `
+                <div class="flex-between">
+                    <div><strong>📂 文件管理（收文）</strong> <span style="font-size:0.7rem;">*登记号格式: 组号+流水</span></div>
+                    <button class="btn btn-sm" id="addFileBtn">+ 添加文件</button>
+                </div>
+                <div class="mock-table" style="margin-top:15px;">
+                    <table>
+                        <thead><tr><th>登记号</th><th>题名</th><th>责任者</th><th>文号</th><th>原文</th><th>操作</th></tr></thead>
+                        <tbody id="fileTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="tips">📌 提示：每个文件需挂接PDF原文（模拟已挂接）。签收人默认为当前登录人。预归档操作可将选中的文件送入预归档库。</div>
+                <button class="btn" id="toPrearchiveBtn" style="margin-top:15px;">➡️ 预归档所选文件</button>
+            `;
+            renderFileTable();
+            document.getElementById('addFileBtn')?.addEventListener('click', addMockFile);
+            document.getElementById('toPrearchiveBtn')?.addEventListener('click', toPrearchive);
+        } 
+        else if (currentStep === 1) {
+            container.innerHTML = `
+                <div><strong>📦 预归档库（按件整理）</strong></div>
+                <div class="mock-table" style="margin-top:15px;">
+                    <table>
+                        <thead><tr><th>档号(待生成)</th><th>题名</th><th>责任者</th><th>保管期限</th><th>原文</th><th>操作</th></tr></thead>
+                        <tbody id="prearchiveTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="tips">⚠️ 预归档库中可“打回”到文件收集，或“审核归档”。审核通过后自动生成档号并加盖档号章（模拟）。</div>
+                <button class="btn" id="batchAuditBtn">✅ 批量审核通过并归档</button>
+            `;
+            renderPrearchiveTable();
+            document.getElementById('batchAuditBtn')?.addEventListener('click', batchAudit);
+        } 
+        else if (currentStep === 2) {
+            container.innerHTML = `
+                <div><strong>🔍 审核归档 - 正式档案库预归档审核</strong></div>
+                <div class="mock-table">
+                    <table>
+                        <thead><tr><th>档号</th><th>题名</th><th>归档年度</th><th>保管期限</th><th>档号章</th><th>审核状态</th><th>操作</th></tr></thead>
+                        <tbody id="auditTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="tips">✨ 审核检查通过后进入正式档案库。档号章已自动加盖（PDF原文可见模拟）。</div>
+                <button class="btn" id="finalArchiveBtn">📌 将审核通过的档案正式入库</button>
+            `;
+            renderAuditTable();
+            document.getElementById('finalArchiveBtn')?.addEventListener('click', finalArchive);
+        } 
+        else if (currentStep === 3) {
+            container.innerHTML = `
+                <div><strong>🏛️ 正式档案库 & 库房上架</strong></div>
+                <div class="mock-table">
+                    <table>
+                        <thead><tr><th>档号</th><th>题名</th><th>存放位置</th><th>操作</th></tr></thead>
+                        <tbody id="archiveTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="tips">📦 可修改存放位置（密集架），例如：第20组-A01柜格。</div>
+                <button class="btn" id="refreshArchives">🔄 刷新</button>
+            `;
+            renderArchiveTable();
+            document.getElementById('refreshArchives')?.addEventListener('click', renderArchiveTable);
+        }
+    }
+
+    function renderFileTable() {
+        const tbody = document.getElementById('fileTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = files.map(f => `
+            <tr>
+                <td>${f.registerNo}</td>
+                <td>${f.title}</td>
+                <td>${f.creator}</td>
+                <td>${f.docNo}</td>
+                <td>${f.hasPdf ? '📄 PDF已挂接' : '❌ 未挂接'}</td>
+                <td><button class="btn-sm btn-outline" data-id="${f.id}" data-action="edit">编辑</button></td>
+            </tr>
+        `).join('');
+        // 编辑功能简化
+        document.querySelectorAll('[data-action="edit"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                addLog("✏️ 编辑文件元数据（模拟）");
+            });
+        });
+    }
+
+    function addMockFile() {
+        const newId = (files.length + 1).toString();
+        const newReg = `${groupNo}${String(nextSerial++).padStart(3,'0')}`;
+        files.push({
+            id: newId, title: "新文件-实验素材", creator: currentUser.split('-')[2] || "张三丰",
+            date: "2025-04-01", docNo: "本组办发〔2025〕1号", registerNo: newReg, status: "未归档",
+            fileSize: "0.5MB", hasPdf: true
+        });
+        addLog(`📄 添加文件：登记号 ${newReg}`);
+        renderFileTable();
+    }
+
+    function toPrearchive() {
+        if (files.length === 0) { addLog("没有文件可预归档"); return; }
+        // 将 files 全部移到预归档库（模拟批量选择）
+        for (let f of files) {
+            prearchives.push({
+                ...f,
+                archiveStatus: "待审核",
+                retention: "永久",
+                year: "2025",
+                org: "办公室"
+            });
+        }
+        addLog(`📥 已将 ${files.length} 份文件送入预归档库。`);
+        files = [];
+        stepCompleted[0] = true;
+        currentStep = 1;
+        renderSteps();
+        renderStepContent();
+    }
+
+    function renderPrearchiveTable() {
+        const tbody = document.getElementById('prearchiveTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = prearchives.map((p, idx) => `
+            <tr>
+                <td>待生成</td>
+                <td>${p.title}</td>
+                <td>${p.creator}</td>
+                <td><select data-idx="${idx}" class="retentionSelect"><option>永久</option><option>定期30年</option><option selected>永久</option></select></td>
+                <td>${p.hasPdf ? 'PDF' : '无'}</td>
+                <td><button class="btn-sm" data-idx="${idx}" data-action="reject">打回</button></td>
+            </tr>
+        `).join('');
+        // 打回功能
+        document.querySelectorAll('[data-action="reject"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                let idx = parseInt(btn.dataset.idx);
+                let rejected = prearchives.splice(idx,1)[0];
+                files.push(rejected);
+                addLog(`↩️ 打回文件: ${rejected.title} 至文件收集区`);
+                renderPrearchiveTable();
+                renderFileTable();
+            });
+        });
+    }
+
+    function batchAudit() {
+        if (preatchives.length === 0) { addLog("预归档库为空"); return; }
+        // 模拟审核通过，自动生成档号
+        for (let p of prearchives) {
+            // 档号格式: 全宗号-年度-保管期限-机构-件号（模拟）
+            let retentionShort = "Y"; // 永久
+            let danghao = `${groupFullNo}-2025-${retentionShort}-${p.org || "BG"}-${Math.floor(Math.random()*100)}`;
+            p.danghao = danghao;
+            p.auditPass = true;
+        }
+        addLog(`✅ 预归档库 ${preatchives.length} 件档案审核通过，档号已生成。`);
+        stepCompleted[1] = true;
+        currentStep = 2;
+        renderSteps();
+        renderStepContent();
+    }
+
+    function renderAuditTable() {
+        const tbody = document.getElementById('auditTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = prearchives.map((p, idx) => `
+            <tr>
+                <td>${p.danghao || '待生成'}</td>
+                <td>${p.title}</td>
+                <td>2025</td>
+                <td>永久</td>
+                <td>${p.hasPdf ? '✅ 档号章已盖' : '无原文'}</td>
+                <td>审核通过</td>
+                <td><button class="btn-sm" data-idx="${idx}" data-action="editMeta">修改元数据</button></td>
+            </tr>
+        `).join('');
+    }
+
+    function finalArchive() {
+        for (let p of prearchives) {
+            archives.push({ ...p, location: "未上架", formal: true });
+        }
+        addLog(`📚 已将 ${preatchives.length} 件档案正式入库，可进行库房上架操作。`);
+        prearchives = [];
+        stepCompleted[2] = true;
+        currentStep = 3;
+        renderSteps();
+        renderStepContent();
+    }
+
+    function renderArchiveTable() {
+        const tbody = document.getElementById('archiveTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = archives.map((a, idx) => `
+            <tr>
+                <td>${a.danghao}</td>
+                <td>${a.title}</td>
+                <td><input type="text" id="loc_${idx}" value="${a.location}" placeholder="库房位置" style="width:120px;"></td>
+                <td><button class="btn-sm" data-idx="${idx}" data-action="saveLoc">保存位置</button></td>
+            </tr>
+        `).join('');
+        document.querySelectorAll('[data-action="saveLoc"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                let idx = parseInt(btn.dataset.idx);
+                let newLoc = document.getElementById(`loc_${idx}`).value;
+                archives[idx].location = newLoc;
+                addLog(`🏢 档案 ${archives[idx].danghao} 存放位置更新为 ${newLoc}`);
+            });
+        });
+    }
+
+    // 重置
+    function resetAll() {
+        if (confirm("重置将清空所有数据，确定吗？")) {
+            initDemo();
+            currentStep = 0;
+            stepCompleted = [false, false, false, false];
+            renderSteps();
+            renderStepContent();
+            addLog("🔄 已重置全部流程，可重新开始练习。");
+        }
+    }
+
+    // 清空日志
+    document.getElementById('clearLog')?.addEventListener('click', () => {
+        document.getElementById('logPanel').innerHTML = '<div class="log-line">日志已清空</div>';
+    });
+
+    // 全局重置按钮(加在侧边栏)
+    const resetBtn = document.createElement('button');
+    resetBtn.innerText = '⟳ 重置全部实验';
+    resetBtn.className = 'btn btn-sm';
+    resetBtn.style.marginTop = '15px';
+    resetBtn.style.background = '#dc2626';
+    resetBtn.onclick = resetAll;
+    document.querySelector('.side-panel .card:first-child').appendChild(resetBtn);
+
+    initDemo();
+    renderSteps();
+    renderStepContent();
+</script>
+</body>
+</html>

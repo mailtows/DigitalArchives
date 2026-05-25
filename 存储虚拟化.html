@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 存储虚拟化 · 存储池模拟实验</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Roboto', 'Microsoft YaHei', sans-serif;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(145deg, #0b1a2a 0%, #1b2f44 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .simulator {
+            max-width: 1300px;
+            width: 100%;
+            background: rgba(20, 35, 50, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid #3a5f7a;
+            border-radius: 36px;
+            padding: 28px 30px;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.6);
+            color: #f0f6fc;
+        }
+        h1 {
+            margin: 0 0 6px 0;
+            font-weight: 400;
+            font-size: 2.2rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        h1 small {
+            font-size: 1rem;
+            font-weight: 400;
+            background: #1e4d6b;
+            padding: 4px 14px;
+            border-radius: 40px;
+            color: #cde5ff;
+        }
+        .subhead {
+            margin-top: 0;
+            margin-bottom: 24px;
+            color: #b0c7dd;
+            border-left: 5px solid #4fc3f7;
+            padding-left: 18px;
+            font-weight: 300;
+        }
+        .layers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+        .layer {
+            background: rgba(12, 24, 36, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 28px;
+            padding: 20px 18px;
+            border: 1px solid #3e5f7a;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), 0 6px 12px rgba(0,0,0,0.3);
+            flex: 1 1 200px;
+        }
+        .layer-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #bbdefb;
+            border-bottom: 1px dashed #4a6f8f;
+            padding-bottom: 12px;
+        }
+        .disk-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+        }
+        .disk-card {
+            background: #1a3347;
+            border-radius: 18px;
+            padding: 16px 12px;
+            min-width: 100px;
+            text-align: center;
+            box-shadow: 0 6px 0 #0f1a24;
+            border: 1px solid #3c6682;
+            transition: all 0.2s;
+        }
+        .disk-icon {
+            font-size: 2.4rem;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+        .disk-name {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        .disk-size {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        .disk-status {
+            margin-top: 8px;
+            font-size: 0.7rem;
+            background: #0e1a26;
+            padding: 4px 8px;
+            border-radius: 30px;
+            color: #aaccff;
+        }
+        .virt-device {
+            background: #1f3e57;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+            border-left: 6px solid #4fc3f7;
+        }
+        .virt-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+        }
+        .virt-detail {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        .fs-mount {
+            background: #1a3a32;
+            border-radius: 14px;
+            padding: 16px;
+            border: 1px solid #3e9b7e;
+            color: #d0f0e4;
+        }
+        .step-panel {
+            background: #0e1b26;
+            border-radius: 30px;
+            padding: 22px 24px;
+            margin-top: 20px;
+            border: 1px solid #38536b;
+        }
+        .steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .step-btn {
+            background: #1e3f5a;
+            border: none;
+            color: #e1ecf5;
+            padding: 12px 22px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #0f1a22;
+            transition: 0.15s;
+            border: 1px solid #3b6682;
+            flex: 0 1 auto;
+        }
+        .step-btn:hover {
+            background: #2e6185;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 0 #0f1a22;
+        }
+        .step-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #0f1a22;
+        }
+        .step-btn.disabled {
+            opacity: 0.45;
+            pointer-events: none;
+            filter: grayscale(0.5);
+        }
+        .reset-btn {
+            background: #4a2e3e;
+            border-color: #b45f7a;
+        }
+        .log-area {
+            background: #071016;
+            border-radius: 20px;
+            padding: 14px 20px;
+            font-family: 'Consolas', 'Cascadia Code', monospace;
+            font-size: 0.9rem;
+            color: #b0e0a0;
+            border: 1px solid #3a6d4c;
+            min-height: 70px;
+        }
+        .badge {
+            background: #1e4d6b;
+            padding: 2px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #cde5ff;
+        }
+        button {
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+<div class="simulator">
+    <h1>
+        🪟 Windows 存储虚拟化 · 存储池模拟
+        <small>存储空间 / 虚拟磁盘 / 卷</small>
+    </h1>
+    <div class="subhead">物理磁盘 → 存储池 → 虚拟磁盘 (弹性/镜像) → 卷 → 驱动器号</div>
+
+    <!-- 三层可视化 -->
+    <div class="layers">
+        <!-- 物理层 -->
+        <div class="layer">
+            <div class="layer-title"><span>🧱 物理磁盘</span> <span class="badge">磁盘 1~3</span></div>
+            <div class="disk-grid" id="physicalDisks"></div>
+        </div>
+        <!-- 虚拟化中间层：存储池 + 虚拟磁盘 -->
+        <div class="layer">
+            <div class="layer-title"><span>🗄️ 存储池与虚拟磁盘</span> <span class="badge">Storage Spaces</span></div>
+            <div id="virtualLayer"></div>
+        </div>
+        <!-- 卷/驱动器层 -->
+        <div class="layer">
+            <div class="layer-title"><span>💾 卷 (驱动器)</span></div>
+            <div id="fsLayer"></div>
+        </div>
+    </div>
+
+    <!-- 步骤控制区 -->
+    <div class="step-panel">
+        <div class="steps">
+            <button class="step-btn" id="step1">1️⃣ 初始化物理磁盘 (磁盘1,2,3)</button>
+            <button class="step-btn" id="step2">2️⃣ 创建存储池 (MyStoragePool)</button>
+            <button class="step-btn" id="step3">3️⃣ 创建虚拟磁盘 (弹性/简单布局 20GB)</button>
+            <button class="step-btn" id="step4">4️⃣ 初始化虚拟磁盘 (GPT)</button>
+            <button class="step-btn" id="step5">5️⃣ 新建卷并格式化 (NTFS, E:)</button>
+            <button class="step-btn reset-btn" id="reset">🔄 重置实验</button>
+        </div>
+        <div class="log-area" id="logPanel">
+            > 准备就绪。点击步骤按钮，模拟 Windows 存储池与存储空间配置过程。
+        </div>
+        <div style="margin-top: 10px; font-size: 0.8rem; opacity:0.7; display:flex; gap:20px;">
+            <span>✅ 当前状态: <span id="stateIndicator">未开始</span></span>
+            <span>💡 提示: 按顺序执行，观察存储虚拟化分层</span>
+        </div>
+    </div>
+</div>
+<script>
+    (function(){
+        "use strict";
+
+        // --- 模拟状态管理 (Windows 术语) ---
+        const state = {
+            // 物理磁盘: 3块 10GB
+            disks: [
+                { id: 'Disk1', name: '磁盘 1', size: 10, inPool: false },
+                { id: 'Disk2', name: '磁盘 2', size: 10, inPool: false },
+                { id: 'Disk3', name: '磁盘 3', size: 10, inPool: false }
+            ],
+            storagePool: null,          // { name: 'MyStoragePool', totalSize: 30, freeSize: 30, disks: [...] }
+            virtualDisk: null,          // { name: 'ArchiveVD', layout: 'Simple', size: 20, pool: 'MyStoragePool', initialized: false }
+            volume: null,               // { driveLetter: 'E:', label: 'Archive', fs: 'NTFS', size: 20, vd: 'ArchiveVD' }
+            step: 0
+        };
+
+        function renderAll() {
+            renderPhysicalDisks();
+            renderVirtualLayer();
+            renderFSLayer();
+            updateStepButtons();
+            updateStateIndicator();
+        }
+
+        function renderPhysicalDisks() {
+            const container = document.getElementById('physicalDisks');
+            let html = '';
+            state.disks.forEach(d => {
+                html += `<div class="disk-card">
+                    <div class="disk-icon">💽</div>
+                    <div class="disk-name">${d.name}</div>
+                    <div class="disk-size">${d.size} GB</div>
+                    <div class="disk-status">${d.inPool ? '🔵 已加入存储池' : '⚪ 未分配'}</div>
+                </div>`;
+            });
+            // 系统盘 (C:)
+            html += `<div class="disk-card" style="opacity:0.7; border-color:#6a5e4c;">
+                <div class="disk-icon">🖴</div>
+                <div class="disk-name">磁盘 0</div>
+                <div class="disk-size">120 GB</div>
+                <div class="disk-status">⚙️ 系统盘 (C:)</div>
+            </div>`;
+            container.innerHTML = html;
+        }
+
+        function renderVirtualLayer() {
+            const container = document.getElementById('virtualLayer');
+            let html = '';
+
+            // 存储池
+            if (state.storagePool) {
+                html += `<div class="virt-device" style="border-left-color: #81c784;">
+                    <div class="virt-name"><span>📦 存储池 ${state.storagePool.name}</span> <span>${state.storagePool.freeSize} GB 可用 / ${state.storagePool.totalSize} GB 总量</span></div>
+                    <div class="virt-detail">物理磁盘: ${state.storagePool.disks.map(d => d.name).join(', ')}</div>
+                </div>`;
+            } else {
+                html += `<div class="virt-device" style="opacity:0.5; border-left-color: #5f7f9f;">
+                    <div class="virt-name">⏳ 存储池未创建</div>
+                    <div class="virt-detail">等待步骤2</div>
+                </div>`;
+            }
+
+            // 虚拟磁盘
+            if (state.virtualDisk) {
+                const initStatus = state.virtualDisk.initialized ? '✅ 已初始化(GPT)' : '⏸️ 未初始化';
+                html += `<div class="virt-device" style="border-left-color: #ffb74d;">
+                    <div class="virt-name"><span>💿 虚拟磁盘 ${state.virtualDisk.name}</span> <span>${state.virtualDisk.size} GB</span></div>
+                    <div class="virt-detail">布局: ${state.virtualDisk.layout} (弹性) · 来自池: ${state.virtualDisk.pool} · ${initStatus}</div>
+                </div>`;
+            } else if (state.storagePool) {
+                html += `<div class="virt-device" style="opacity:0.6; border-left-color: #5f7f9f;">
+                    <div class="virt-name">⏸️ 虚拟磁盘未创建</div>
+                    <div class="virt-detail">可在存储池中创建虚拟磁盘</div>
+                </div>`;
+            }
+
+            container.innerHTML = html || '<div style="padding:12px;opacity:0.6;">等待存储池配置…</div>';
+        }
+
+        function renderFSLayer() {
+            const container = document.getElementById('fsLayer');
+            if (state.volume) {
+                container.innerHTML = `<div class="fs-mount">
+                    <div style="font-size:1.6rem; margin-bottom:6px;">💾 ${state.volume.driveLetter} (${state.volume.label})</div>
+                    <div>文件系统: ${state.volume.fs} · 容量: ${state.volume.size} GB</div>
+                    <div>基于虚拟磁盘: ${state.volume.vd}</div>
+                    <div style="margin-top:14px; background:#0d2620; border-radius:12px; padding:10px;">📁 用户视角: 一个普通的 ${state.volume.size}GB 数据盘，可用于存放档案、数据库等。</div>
+                </div>`;
+            } else {
+                container.innerHTML = `<div style="padding:20px; text-align:center; opacity:0.6; border:1px dashed #4f7a9e; border-radius:20px;">📂 尚未创建卷<br>完成步骤5后可见驱动器</div>`;
+            }
+        }
+
+        function updateStepButtons() {
+            const step = state.step;
+            document.getElementById('step1').classList.toggle('disabled', step >= 1);
+            document.getElementById('step2').classList.toggle('disabled', step < 1 || step >= 2);
+            document.getElementById('step3').classList.toggle('disabled', step < 2 || step >= 3);
+            document.getElementById('step4').classList.toggle('disabled', step < 3 || step >= 4);
+            document.getElementById('step5').classList.toggle('disabled', step < 4 || step >= 5);
+        }
+
+        function updateStateIndicator() {
+            const ind = document.getElementById('stateIndicator');
+            const map = ['未开始','物理磁盘就绪','存储池已创建','虚拟磁盘已创建','虚拟磁盘已初始化','卷已格式化并挂载'];
+            ind.innerText = map[state.step] || '未知';
+        }
+
+        function log(message, isGood = true) {
+            const logPanel = document.getElementById('logPanel');
+            const prefix = isGood ? '> ✅' : '> ⚠️';
+            logPanel.innerHTML = `${prefix} ${message}<br>` + logPanel.innerHTML;
+        }
+
+        // --- 步骤实现 ---
+        function step1_initDisks() {
+            if (state.step >= 1) { log('物理磁盘已经识别', false); return; }
+            state.disks.forEach(d => d.inPool = false);
+            state.step = 1;
+            log('已识别三块物理磁盘 (磁盘1, 磁盘2, 磁盘3)，各10GB，未分配。');
+            renderAll();
+        }
+
+        function step2_createPool() {
+            if (state.step !== 1) { log('请先执行步骤1', false); return; }
+            state.disks.forEach(d => d.inPool = true);
+            state.storagePool = {
+                name: 'MyStoragePool',
+                totalSize: 30,
+                freeSize: 30,
+                disks: [...state.disks]
+            };
+            state.step = 2;
+            log('New-StoragePool -FriendlyName MyStoragePool -PhysicalDisks (磁盘1,磁盘2,磁盘3) : 存储池创建成功，总容量30GB。');
+            renderAll();
+        }
+
+        function step3_createVD() {
+            if (state.step !== 2) { log('请先创建存储池', false); return; }
+            if (state.storagePool.freeSize < 20) { log('存储池可用空间不足', false); return; }
+            state.virtualDisk = {
+                name: 'ArchiveVD',
+                layout: 'Simple (弹性)',
+                size: 20,
+                pool: 'MyStoragePool',
+                initialized: false
+            };
+            state.storagePool.freeSize -= 20;
+            state.step = 3;
+            log('New-VirtualDisk -StoragePoolName MyStoragePool -FriendlyName ArchiveVD -Size 20GB -ResiliencySettingName Simple : 虚拟磁盘已创建。');
+            renderAll();
+        }
+
+        function step4_initVD() {
+            if (state.step !== 3) { log('请先创建虚拟磁盘', false); return; }
+            state.virtualDisk.initialized = true;
+            state.step = 4;
+            log('Initialize-Disk -Number (虚拟磁盘) -PartitionStyle GPT : 虚拟磁盘已初始化为GPT。');
+            renderAll();
+        }
+
+        function step5_createVolume() {
+            if (state.step !== 4) { log('请先初始化虚拟磁盘', false); return; }
+            state.volume = {
+                driveLetter: 'E:',
+                label: 'Archive',
+                fs: 'NTFS',
+                size: 20,
+                vd: 'ArchiveVD'
+            };
+            state.step = 5;
+            log('New-Partition -DiskNumber X -UseMaximumSize -DriveLetter E | Format-Volume -FileSystem NTFS : 卷 E: 已格式化并挂载。');
+            renderAll();
+        }
+
+        function resetSim() {
+            state.disks = [
+                { id: 'Disk1', name: '磁盘 1', size: 10, inPool: false },
+                { id: 'Disk2', name: '磁盘 2', size: 10, inPool: false },
+                { id: 'Disk3', name: '磁盘 3', size: 10, inPool: false }
+            ];
+            state.storagePool = null;
+            state.virtualDisk = null;
+            state.volume = null;
+            state.step = 0;
+            log('实验已重置。请从步骤1开始。');
+            renderAll();
+        }
+
+        // 绑定事件
+        document.getElementById('step1').addEventListener('click', step1_initDisks);
+        document.getElementById('step2').addEventListener('click', step2_createPool);
+        document.getElementById('step3').addEventListener('click', step3_createVD);
+        document.getElementById('step4').addEventListener('click', step4_initVD);
+        document.getElementById('step5').addEventListener('click', step5_createVolume);
+        document.getElementById('reset').addEventListener('click', resetSim);
+
+        renderAll();
+        log('模拟器已启动。本实验演示 Windows Server 存储池 + 虚拟磁盘 (类似软件定义存储)。');
+    })();
+</script>
+</body>
+</html>
